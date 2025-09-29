@@ -10,6 +10,7 @@ import { errorHandler } from './middleware/errorHandler';
 import { requestLogger } from './middleware/requestLogger';
 import { validateEnv } from './utils/validateEnv';
 import { connectDatabases } from './database/connections';
+import { initializeCacheService, closeCacheService } from './services/cacheService';
 
 // Import route handlers
 import nodeRoutes from './routes/nodes';
@@ -165,6 +166,28 @@ async function startServer() {
     // Connect to databases
     await connectDatabases();
 
+    // Initialize Redis cache service if enabled
+    if (process.env.REDIS_ENABLED === 'true') {
+      try {
+        const cacheService = initializeCacheService({
+          host: process.env.REDIS_HOST || 'localhost',
+          port: parseInt(process.env.REDIS_PORT || '6379'),
+          password: process.env.REDIS_PASSWORD,
+          retryDelayOnFailover: 100,
+          maxRetriesPerRequest: 3,
+          lazyConnect: true
+        });
+
+        await cacheService.connect();
+        logger.info('✅ Redis cache service initialized');
+      } catch (error) {
+        logger.warn('⚠️ Failed to initialize Redis cache service:', error);
+        logger.info('🔄 Continuing without caching...');
+      }
+    } else {
+      logger.info('🔄 Redis caching disabled (REDIS_ENABLED=false)');
+    }
+
     // Start the server
     app.listen(PORT, () => {
       logger.info(`🚀 Ryuk API server running on port ${PORT}`);
@@ -186,11 +209,21 @@ async function startServer() {
 async function gracefulShutdown(signal: string) {
   logger.info(`Received ${signal}. Starting graceful shutdown...`);
 
+  // Close cache service
+  try {
+    await closeCacheService();
+    logger.info('Cache service closed');
+  } catch (error) {
+    logger.error('Error closing cache service:', error);
+  }
+
   // Close database connections
   try {
     const { neo4jDriver, redisClient } = await import('./database/connections');
     await neo4jDriver.close();
-    redisClient.disconnect();
+    if (redisClient) {
+      redisClient.disconnect();
+    }
     logger.info('Database connections closed');
   } catch (error) {
     logger.error('Error closing database connections:', error);

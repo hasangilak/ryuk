@@ -29,6 +29,19 @@ FOR (l:Location) REQUIRE l.id IS UNIQUE;
 CREATE CONSTRAINT item_id_unique IF NOT EXISTS
 FOR (i:Item) REQUIRE i.id IS UNIQUE;
 
+// Phase 2 Node Types - Hierarchical Container Model
+// Story nodes - unique ID constraint
+CREATE CONSTRAINT story_id_unique IF NOT EXISTS
+FOR (s:Story) REQUIRE s.id IS UNIQUE;
+
+// Knot nodes - unique ID constraint
+CREATE CONSTRAINT knot_id_unique IF NOT EXISTS
+FOR (k:Knot) REQUIRE k.id IS UNIQUE;
+
+// Stitch nodes - unique ID constraint
+CREATE CONSTRAINT stitch_id_unique IF NOT EXISTS
+FOR (st:Stitch) REQUIRE st.id IS UNIQUE;
+
 // =============================================================================
 // PROPERTY EXISTENCE CONSTRAINTS
 // =============================================================================
@@ -68,6 +81,19 @@ FOR (l:Location) REQUIRE l.name IS NOT NULL;
 // Item required properties
 CREATE CONSTRAINT item_name_exists IF NOT EXISTS
 FOR (i:Item) REQUIRE i.name IS NOT NULL;
+
+// Phase 2 required properties
+// Story required properties
+CREATE CONSTRAINT story_title_exists IF NOT EXISTS
+FOR (s:Story) REQUIRE s.title IS NOT NULL;
+
+// Knot required properties
+CREATE CONSTRAINT knot_name_exists IF NOT EXISTS
+FOR (k:Knot) REQUIRE k.name IS NOT NULL;
+
+// Stitch required properties
+CREATE CONSTRAINT stitch_name_exists IF NOT EXISTS
+FOR (st:Stitch) REQUIRE st.name IS NOT NULL;
 
 // =============================================================================
 // PERFORMANCE INDEXES
@@ -118,6 +144,63 @@ FOR (i:Item) ON (i.item_type);
 CREATE INDEX item_significance IF NOT EXISTS
 FOR (i:Item) ON (i.significance);
 
+// Phase 2 Performance Indexes
+// Story indexes
+CREATE INDEX story_title IF NOT EXISTS
+FOR (s:Story) ON (s.title);
+
+CREATE INDEX story_genre IF NOT EXISTS
+FOR (s:Story) ON (s.genre);
+
+CREATE INDEX story_status IF NOT EXISTS
+FOR (s:Story) ON (s.status);
+
+// Knot indexes
+CREATE INDEX knot_name IF NOT EXISTS
+FOR (k:Knot) ON (k.name);
+
+CREATE INDEX knot_type IF NOT EXISTS
+FOR (k:Knot) ON (k.knot_type);
+
+// Stitch indexes
+CREATE INDEX stitch_name IF NOT EXISTS
+FOR (st:Stitch) ON (st.name);
+
+CREATE INDEX stitch_type IF NOT EXISTS
+FOR (st:Stitch) ON (st.stitch_type);
+
+// Choice analytics indexes
+CREATE INDEX choice_selection_count IF NOT EXISTS
+FOR (ch:Choice) ON (ch.selection_count);
+
+CREATE INDEX choice_convergent_weight IF NOT EXISTS
+FOR (ch:Choice) ON (ch.convergent_weight);
+
+// =============================================================================
+// DATA INTEGRITY CONSTRAINTS
+// =============================================================================
+
+// Scene title uniqueness within chapter constraint (business rule)
+// Note: This would need to be enforced at application level
+// as Neo4j doesn't support conditional uniqueness directly
+
+// Scene sequence validation - ensure no gaps in sequences
+// This constraint ensures scenes have valid sequence numbers
+CREATE CONSTRAINT scene_sequence_positive IF NOT EXISTS
+FOR (s:Scene) REQUIRE s.sequence > 0;
+
+// Chapter constraint - must be positive
+CREATE CONSTRAINT scene_chapter_positive IF NOT EXISTS
+FOR (s:Scene) REQUIRE s.chapter > 0;
+
+// Choice weight constraint - must be between 0 and 1
+// Note: Neo4j doesn't support range constraints directly,
+// this needs to be enforced at application level
+
+// Event causality level constraint - must be positive
+CREATE CONSTRAINT event_causality_positive IF NOT EXISTS
+FOR (e:Event) REQUIRE e.causality_level >= 0;
+
 // =============================================================================
 // RELATIONSHIP TYPE VALIDATION (via patterns)
 // =============================================================================
@@ -134,6 +217,20 @@ FOR (i:Item) ON (i.significance);
 // MATCH (c:Character)-[r:APPEARS_IN]->(target)
 // WHERE NOT (target:Scene OR target:Event)
 // RETURN COUNT(r) as invalid_appears_in_relationships;
+
+// Validate CONTAINS relationships (hierarchical integrity)
+// MATCH (container)-[r:CONTAINS]->(content)
+// WHERE NOT (
+//   (container:Story AND (content:Knot OR content:Scene)) OR
+//   (container:Knot AND (content:Stitch OR content:Scene)) OR
+//   (container:Stitch AND content:Scene)
+// )
+// RETURN COUNT(r) as invalid_contains_relationships;
+
+// Validate CONVERGES_TO relationships (choice convergence)
+// MATCH (choice:Choice)-[r:CONVERGES_TO]->(target)
+// WHERE NOT target:Scene
+// RETURN COUNT(r) as invalid_convergence_relationships;
 
 // =============================================================================
 // INITIAL SAMPLE DATA (for development)

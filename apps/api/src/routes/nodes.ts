@@ -2,12 +2,17 @@ import { Router, Request, Response, NextFunction } from 'express';
 import { NodeService } from '../services/nodeService';
 import { ValidationError } from '../middleware/errorHandler';
 import { HTTP_STATUS_CODES, NodeType } from '@ryuk/shared';
+import {
+  nodesCacheMiddleware,
+  singleNodeCacheMiddleware,
+  nodeInvalidationMiddleware
+} from '../middleware/caching';
 
 const router = Router();
 const nodeService = new NodeService();
 
 // GET /api/nodes - List nodes with filtering and pagination
-router.get('/', async (req: Request, res: Response, next: NextFunction) => {
+router.get('/', nodesCacheMiddleware, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const {
       type,
@@ -54,7 +59,7 @@ router.get('/', async (req: Request, res: Response, next: NextFunction) => {
 });
 
 // POST /api/nodes - Create a new node
-router.post('/', async (req: Request, res: Response, next: NextFunction) => {
+router.post('/', nodeInvalidationMiddleware, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { type, ...nodeData } = req.body;
 
@@ -81,7 +86,7 @@ router.post('/', async (req: Request, res: Response, next: NextFunction) => {
 });
 
 // GET /api/nodes/:id - Get a specific node by ID
-router.get('/:id', async (req: Request, res: Response, next: NextFunction) => {
+router.get('/:id', singleNodeCacheMiddleware, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { id } = req.params;
 
@@ -101,7 +106,7 @@ router.get('/:id', async (req: Request, res: Response, next: NextFunction) => {
 });
 
 // PUT /api/nodes/:id - Update a node
-router.put('/:id', async (req: Request, res: Response, next: NextFunction) => {
+router.put('/:id', nodeInvalidationMiddleware, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { id } = req.params;
     const updateData = req.body;
@@ -129,7 +134,7 @@ router.put('/:id', async (req: Request, res: Response, next: NextFunction) => {
 });
 
 // DELETE /api/nodes/:id - Delete a node
-router.delete('/:id', async (req: Request, res: Response, next: NextFunction) => {
+router.delete('/:id', nodeInvalidationMiddleware, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { id } = req.params;
 
