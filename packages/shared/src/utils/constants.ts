@@ -9,6 +9,10 @@ export const NODE_TYPES = {
   EVENT: 'Event',
   LOCATION: 'Location',
   ITEM: 'Item',
+  // Phase 2: Hierarchical Container Types
+  STORY: 'Story',
+  KNOT: 'Knot',
+  STITCH: 'Stitch',
 } as const;
 
 export const ALL_NODE_TYPES = Object.values(NODE_TYPES);
@@ -23,6 +27,13 @@ export const RELATIONSHIP_TYPES = {
   TRIGGERS: 'TRIGGERS',
   REQUIRES: 'REQUIRES',
   LOCATED_AT: 'LOCATED_AT',
+  // Phase 2: Advanced Relationship Types
+  CONTAINS: 'CONTAINS',
+  BELONGS_TO: 'BELONGS_TO',
+  CONVERGES_TO: 'CONVERGES_TO',
+  GROUPED_WITH: 'GROUPED_WITH',
+  INFLUENCES: 'INFLUENCES',
+  APPEARS_THROUGHOUT: 'APPEARS_THROUGHOUT',
 } as const;
 
 export const ALL_RELATIONSHIP_TYPES = Object.values(RELATIONSHIP_TYPES);

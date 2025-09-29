@@ -91,14 +91,84 @@ export const LocatedAtRelationshipSchema = BaseRelationshipSchema.extend({
 export type LocatedAtRelationship = z.infer<typeof LocatedAtRelationshipSchema>;
 
 // =============================================================================
+// PHASE 2: ADVANCED RELATIONSHIP TYPES
+// =============================================================================
+
+// CONTAINS - Hierarchical container relationships
+export const ContainsRelationshipSchema = BaseRelationshipSchema.extend({
+  type: z.literal('CONTAINS'),
+  container_type: z.enum(['story', 'knot', 'stitch']),
+  position: z.number().int().min(1),
+  is_required: z.boolean().default(true),
+  access_rules: z.record(z.string(), z.any()).default({}),
+});
+
+export type ContainsRelationship = z.infer<typeof ContainsRelationshipSchema>;
+
+// BELONGS_TO - Reverse hierarchical relationship
+export const BelongsToRelationshipSchema = BaseRelationshipSchema.extend({
+  type: z.literal('BELONGS_TO'),
+  parent_type: z.enum(['story', 'knot', 'stitch']),
+  inheritance_rules: z.record(z.string(), z.any()).default({}),
+});
+
+export type BelongsToRelationship = z.infer<typeof BelongsToRelationshipSchema>;
+
+// CONVERGES_TO - Multiple choice paths to same destination
+export const ConvergesToRelationshipSchema = BaseRelationshipSchema.extend({
+  type: z.literal('CONVERGES_TO'),
+  convergence_weight: z.number().min(0).max(1).default(1.0),
+  path_significance: z.number().min(0).max(10).default(5),
+  state_merge_rules: z.record(z.string(), z.any()).default({}),
+});
+
+export type ConvergesToRelationship = z.infer<typeof ConvergesToRelationshipSchema>;
+
+// GROUPED_WITH - Choice grouping for related decisions
+export const GroupedWithRelationshipSchema = BaseRelationshipSchema.extend({
+  type: z.literal('GROUPED_WITH'),
+  group_type: z.enum(['mutually_exclusive', 'dependent', 'sequential']),
+  group_priority: z.number().int().min(1).default(1),
+  coordination_rules: z.record(z.string(), z.any()).default({}),
+});
+
+export type GroupedWithRelationship = z.infer<typeof GroupedWithRelationshipSchema>;
+
+// INFLUENCES - Character supernode influence relationships
+export const InfluencesRelationshipSchema = BaseRelationshipSchema.extend({
+  type: z.literal('INFLUENCES'),
+  influence_type: z.enum(['direct', 'indirect', 'causal', 'thematic']),
+  influence_strength: z.number().min(0).max(10).default(5),
+  narrative_impact: z.number().min(0).max(1).default(0.5),
+  character_arc_relevance: z.number().min(0).max(1).default(0.5),
+});
+
+export type InfluencesRelationship = z.infer<typeof InfluencesRelationshipSchema>;
+
+// APPEARS_THROUGHOUT - Character presence across story elements
+export const AppearsThroughoutRelationshipSchema = BaseRelationshipSchema.extend({
+  type: z.literal('APPEARS_THROUGHOUT'),
+  presence_type: z.enum(['physical', 'mentioned', 'implied', 'flashback']),
+  importance_in_element: z.number().min(0).max(1).default(0.5),
+  character_state: z.record(z.string(), z.any()).default({}),
+});
+
+export type AppearsThroughoutRelationship = z.infer<typeof AppearsThroughoutRelationshipSchema>;
+
+// =============================================================================
 // UNION TYPES
 // =============================================================================
 
-export const RelationshipTypeSchema = z.enum(['LEADS_TO', 'APPEARS_IN', 'TRIGGERS', 'REQUIRES', 'LOCATED_AT']);
+export const RelationshipTypeSchema = z.enum([
+  'LEADS_TO', 'APPEARS_IN', 'TRIGGERS', 'REQUIRES', 'LOCATED_AT',
+  'CONTAINS', 'BELONGS_TO', 'CONVERGES_TO', 'GROUPED_WITH', 'INFLUENCES', 'APPEARS_THROUGHOUT'
+]);
 export type RelationshipType = z.infer<typeof RelationshipTypeSchema>;
 
 export type AnyRelationship = LeadsToRelationship | AppearsInRelationship | TriggersRelationship |
-                             RequiresRelationship | LocatedAtRelationship;
+                             RequiresRelationship | LocatedAtRelationship |
+                             ContainsRelationship | BelongsToRelationship | ConvergesToRelationship |
+                             GroupedWithRelationship | InfluencesRelationship | AppearsThroughoutRelationship;
 
 // =============================================================================
 // RELATIONSHIP CREATION TYPES
@@ -109,10 +179,19 @@ export type CreateAppearsInRelationship = Omit<AppearsInRelationship, 'id' | 'cr
 export type CreateTriggersRelationship = Omit<TriggersRelationship, 'id' | 'created_at' | 'updated_at'>;
 export type CreateRequiresRelationship = Omit<RequiresRelationship, 'id' | 'created_at' | 'updated_at'>;
 export type CreateLocatedAtRelationship = Omit<LocatedAtRelationship, 'id' | 'created_at' | 'updated_at'>;
+export type CreateContainsRelationship = Omit<ContainsRelationship, 'id' | 'created_at' | 'updated_at'>;
+export type CreateBelongsToRelationship = Omit<BelongsToRelationship, 'id' | 'created_at' | 'updated_at'>;
+export type CreateConvergesToRelationship = Omit<ConvergesToRelationship, 'id' | 'created_at' | 'updated_at'>;
+export type CreateGroupedWithRelationship = Omit<GroupedWithRelationship, 'id' | 'created_at' | 'updated_at'>;
+export type CreateInfluencesRelationship = Omit<InfluencesRelationship, 'id' | 'created_at' | 'updated_at'>;
+export type CreateAppearsThroughoutRelationship = Omit<AppearsThroughoutRelationship, 'id' | 'created_at' | 'updated_at'>;
 
 export type CreateAnyRelationship = CreateLeadsToRelationship | CreateAppearsInRelationship |
                                   CreateTriggersRelationship | CreateRequiresRelationship |
-                                  CreateLocatedAtRelationship;
+                                  CreateLocatedAtRelationship | CreateContainsRelationship |
+                                  CreateBelongsToRelationship | CreateConvergesToRelationship |
+                                  CreateGroupedWithRelationship | CreateInfluencesRelationship |
+                                  CreateAppearsThroughoutRelationship;
 
 // =============================================================================
 // RELATIONSHIP UPDATE TYPES
@@ -123,10 +202,65 @@ export type UpdateAppearsInRelationship = Partial<Omit<AppearsInRelationship, 'i
 export type UpdateTriggersRelationship = Partial<Omit<TriggersRelationship, 'id' | 'created_at'>> & { id: string };
 export type UpdateRequiresRelationship = Partial<Omit<RequiresRelationship, 'id' | 'created_at'>> & { id: string };
 export type UpdateLocatedAtRelationship = Partial<Omit<LocatedAtRelationship, 'id' | 'created_at'>> & { id: string };
+export type UpdateContainsRelationship = Partial<Omit<ContainsRelationship, 'id' | 'created_at'>> & { id: string };
+export type UpdateBelongsToRelationship = Partial<Omit<BelongsToRelationship, 'id' | 'created_at'>> & { id: string };
+export type UpdateConvergesToRelationship = Partial<Omit<ConvergesToRelationship, 'id' | 'created_at'>> & { id: string };
+export type UpdateGroupedWithRelationship = Partial<Omit<GroupedWithRelationship, 'id' | 'created_at'>> & { id: string };
+export type UpdateInfluencesRelationship = Partial<Omit<InfluencesRelationship, 'id' | 'created_at'>> & { id: string };
+export type UpdateAppearsThroughoutRelationship = Partial<Omit<AppearsThroughoutRelationship, 'id' | 'created_at'>> & { id: string };
 
 export type UpdateAnyRelationship = UpdateLeadsToRelationship | UpdateAppearsInRelationship |
                                   UpdateTriggersRelationship | UpdateRequiresRelationship |
-                                  UpdateLocatedAtRelationship;
+                                  UpdateLocatedAtRelationship | UpdateContainsRelationship |
+                                  UpdateBelongsToRelationship | UpdateConvergesToRelationship |
+                                  UpdateGroupedWithRelationship | UpdateInfluencesRelationship |
+                                  UpdateAppearsThroughoutRelationship;
+
+// =============================================================================
+// READER JOURNEY TRACKING TYPES (Phase 2)
+// =============================================================================
+
+export interface ReaderSession {
+  id: string;
+  reader_id: string;
+  story_id: string;
+  started_at: Date;
+  last_activity: Date;
+  current_node_id: string;
+  session_metadata: Record<string, any>;
+}
+
+export interface JourneyStep {
+  id: string;
+  session_id: string;
+  from_node_id: string;
+  to_node_id: string;
+  step_type: 'scene_progression' | 'choice_selection' | 'backtrack' | 'jump';
+  timestamp: Date;
+  time_spent: number; // in milliseconds
+  user_action: string;
+  step_metadata: Record<string, any>;
+}
+
+export interface JourneyPath {
+  id: string;
+  session_id: string;
+  path_nodes: string[];
+  path_relationships: string[];
+  total_duration: number;
+  path_rating: number;
+  completion_status: 'in_progress' | 'completed' | 'abandoned';
+  path_metadata: Record<string, any>;
+}
+
+export interface JourneyAnalytics {
+  session_count: number;
+  avg_session_duration: number;
+  most_popular_paths: string[];
+  dropout_points: string[];
+  choice_selection_rates: Record<string, number>;
+  scene_engagement_scores: Record<string, number>;
+}
 
 // =============================================================================
 // GRAPH TRAVERSAL TYPES

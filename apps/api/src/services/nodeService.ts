@@ -13,6 +13,9 @@ import {
   EventNode,
   LocationNode,
   ItemNode,
+  StoryNode,
+  KnotNode,
+  StitchNode,
 } from '@ryuk/shared';
 
 export interface NodeWithType extends BaseNode {

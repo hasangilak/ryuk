@@ -6,6 +6,9 @@ import {
   EventNodeSchema,
   LocationNodeSchema,
   ItemNodeSchema,
+  StoryNodeSchema,
+  KnotNodeSchema,
+  StitchNodeSchema,
   NodeType,
 } from '../types/nodes';
 import {
@@ -14,6 +17,12 @@ import {
   TriggersRelationshipSchema,
   RequiresRelationshipSchema,
   LocatedAtRelationshipSchema,
+  ContainsRelationshipSchema,
+  BelongsToRelationshipSchema,
+  ConvergesToRelationshipSchema,
+  GroupedWithRelationshipSchema,
+  InfluencesRelationshipSchema,
+  AppearsThroughoutRelationshipSchema,
   RelationshipType,
 } from '../types/relationships';
 
@@ -43,6 +52,15 @@ export function validateNode(nodeType: NodeType, data: any): { success: boolean;
         break;
       case 'Item':
         schema = ItemNodeSchema;
+        break;
+      case 'Story':
+        schema = StoryNodeSchema;
+        break;
+      case 'Knot':
+        schema = KnotNodeSchema;
+        break;
+      case 'Stitch':
+        schema = StitchNodeSchema;
         break;
       default:
         return { success: false, error: `Unknown node type: ${nodeType}` };
@@ -82,6 +100,24 @@ export function validateRelationship(relationshipType: RelationshipType, data: a
         break;
       case 'LOCATED_AT':
         schema = LocatedAtRelationshipSchema;
+        break;
+      case 'CONTAINS':
+        schema = ContainsRelationshipSchema;
+        break;
+      case 'BELONGS_TO':
+        schema = BelongsToRelationshipSchema;
+        break;
+      case 'CONVERGES_TO':
+        schema = ConvergesToRelationshipSchema;
+        break;
+      case 'GROUPED_WITH':
+        schema = GroupedWithRelationshipSchema;
+        break;
+      case 'INFLUENCES':
+        schema = InfluencesRelationshipSchema;
+        break;
+      case 'APPEARS_THROUGHOUT':
+        schema = AppearsThroughoutRelationshipSchema;
         break;
       default:
         return { success: false, error: `Unknown relationship type: ${relationshipType}` };
@@ -130,6 +166,29 @@ export function validateNodeRelationshipCompatibility(
       { from: ['Scene'], to: ['Location'] },
       { from: ['Character'], to: ['Location'] },
       { from: ['Item'], to: ['Location'] },
+    ],
+    // Phase 2: Advanced relationship types
+    CONTAINS: [
+      { from: ['Story'], to: ['Knot'] },
+      { from: ['Knot'], to: ['Stitch'] },
+      { from: ['Stitch'], to: ['Scene', 'Choice'] },
+    ],
+    BELONGS_TO: [
+      { from: ['Knot'], to: ['Story'] },
+      { from: ['Stitch'], to: ['Knot'] },
+      { from: ['Scene', 'Choice'], to: ['Stitch'] },
+    ],
+    CONVERGES_TO: [
+      { from: ['Choice'], to: ['Scene'] },
+    ],
+    GROUPED_WITH: [
+      { from: ['Choice'], to: ['Choice'] },
+    ],
+    INFLUENCES: [
+      { from: ['Character'], to: ['Event', 'Scene', 'Choice'] },
+    ],
+    APPEARS_THROUGHOUT: [
+      { from: ['Character'], to: ['Story', 'Knot', 'Stitch'] },
     ],
   };
 

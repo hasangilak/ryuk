@@ -13,6 +13,12 @@ import {
   TriggersRelationship,
   RequiresRelationship,
   LocatedAtRelationship,
+  ContainsRelationship,
+  BelongsToRelationship,
+  ConvergesToRelationship,
+  GroupedWithRelationship,
+  InfluencesRelationship,
+  AppearsThroughoutRelationship,
   NodeType,
 } from '@ryuk/shared';
 
