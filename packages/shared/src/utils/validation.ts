@@ -9,6 +9,7 @@ import {
   StoryNodeSchema,
   KnotNodeSchema,
   StitchNodeSchema,
+  ContentElementNodeSchema,
   NodeType,
 } from '../types/nodes';
 import {
@@ -61,6 +62,9 @@ export function validateNode(nodeType: NodeType, data: any): { success: boolean;
         break;
       case 'Stitch':
         schema = StitchNodeSchema;
+        break;
+      case 'ContentElement':
+        schema = ContentElementNodeSchema;
         break;
       default:
         return { success: false, error: `Unknown node type: ${nodeType}` };

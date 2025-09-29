@@ -238,14 +238,57 @@ export const StitchNodeSchema = BaseNodeSchema.extend({
 export type StitchNode = z.infer<typeof StitchNodeSchema>;
 
 // =============================================================================
+// CONTENT ELEMENT NODE
+// =============================================================================
+
+export const ContentTypeSchema = z.enum(['text', 'image', 'audio', 'video', 'choice', 'interaction']);
+
+export const ContentElementNodeSchema = BaseNodeSchema.extend({
+  stitch_id: z.string().uuid(),
+  content_type: ContentTypeSchema,
+  sequence_order: z.number().int().min(1),
+  content_data: z.record(z.string(), z.any()),
+  rendering_hints: z.object({
+    display_style: z.string().optional(),
+    animation: z.string().optional(),
+    positioning: z.string().optional(),
+    timing: z.number().optional(),
+    interactive: z.boolean().default(false),
+  }).default({}),
+  accessibility_options: z.object({
+    alt_text: z.string().optional(),
+    screen_reader_text: z.string().optional(),
+    keyboard_navigation: z.boolean().default(true),
+    high_contrast: z.boolean().default(false),
+  }).default({}),
+  content_metadata: z.object({
+    file_size: z.number().optional(),
+    duration: z.number().optional(),
+    mime_type: z.string().optional(),
+    version: z.string().default('1.0'),
+    author: z.string().optional(),
+    created_date: z.date().optional(),
+  }).default({}),
+  validation_rules: z.object({
+    required: z.boolean().default(false),
+    min_interaction_time: z.number().optional(),
+    max_file_size: z.number().optional(),
+    allowed_formats: z.array(z.string()).default([]),
+  }).default({}),
+});
+
+export type ContentElementNode = z.infer<typeof ContentElementNodeSchema>;
+export type ContentType = z.infer<typeof ContentTypeSchema>;
+
+// =============================================================================
 // UNION TYPES
 // =============================================================================
 
 export type AnyNode = SceneNode | CharacterNode | ChoiceNode | EventNode | LocationNode | ItemNode |
-                    StoryNode | KnotNode | StitchNode;
+                    StoryNode | KnotNode | StitchNode | ContentElementNode;
 
 export const NodeTypeSchema = z.enum(['Scene', 'Character', 'Choice', 'Event', 'Location', 'Item',
-                                     'Story', 'Knot', 'Stitch']);
+                                     'Story', 'Knot', 'Stitch', 'ContentElement']);
 export type NodeType = z.infer<typeof NodeTypeSchema>;
 
 // =============================================================================
@@ -261,10 +304,11 @@ export type CreateItemNode = Omit<ItemNode, 'id' | 'created_at' | 'updated_at'>;
 export type CreateStoryNode = Omit<StoryNode, 'id' | 'created_at' | 'updated_at'>;
 export type CreateKnotNode = Omit<KnotNode, 'id' | 'created_at' | 'updated_at'>;
 export type CreateStitchNode = Omit<StitchNode, 'id' | 'created_at' | 'updated_at'>;
+export type CreateContentElementNode = Omit<ContentElementNode, 'id' | 'created_at' | 'updated_at'>;
 
 export type CreateAnyNode = CreateSceneNode | CreateCharacterNode | CreateChoiceNode |
                           CreateEventNode | CreateLocationNode | CreateItemNode |
-                          CreateStoryNode | CreateKnotNode | CreateStitchNode;
+                          CreateStoryNode | CreateKnotNode | CreateStitchNode | CreateContentElementNode;
 
 // =============================================================================
 // UPDATE TYPES (all fields optional except id)
@@ -279,8 +323,9 @@ export type UpdateItemNode = Partial<Omit<ItemNode, 'id' | 'created_at'>> & { id
 export type UpdateStoryNode = Partial<Omit<StoryNode, 'id' | 'created_at'>> & { id: string };
 export type UpdateKnotNode = Partial<Omit<KnotNode, 'id' | 'created_at'>> & { id: string };
 export type UpdateStitchNode = Partial<Omit<StitchNode, 'id' | 'created_at'>> & { id: string };
+export type UpdateContentElementNode = Partial<Omit<ContentElementNode, 'id' | 'created_at'>> & { id: string };
 
 export type UpdateAnyNode = UpdateSceneNode | UpdateCharacterNode | UpdateChoiceNode |
                           UpdateEventNode | UpdateLocationNode | UpdateItemNode |
-                          UpdateStoryNode | UpdateKnotNode | UpdateStitchNode;
+                          UpdateStoryNode | UpdateKnotNode | UpdateStitchNode | UpdateContentElementNode;
 

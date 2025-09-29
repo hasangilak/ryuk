@@ -13,6 +13,7 @@ export const NODE_TYPES = {
   STORY: 'Story',
   KNOT: 'Knot',
   STITCH: 'Stitch',
+  CONTENT_ELEMENT: 'ContentElement',
 } as const;
 
 export const ALL_NODE_TYPES = Object.values(NODE_TYPES);

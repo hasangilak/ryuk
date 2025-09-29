@@ -18,6 +18,7 @@ import relationshipRoutes from './routes/relationships';
 import graphRoutes from './routes/graph';
 import healthRoutes from './routes/health';
 import authRoutes from './routes/auth';
+import phase2Routes from './routes/phase2';
 
 // Load environment variables
 dotenv.config();
@@ -88,15 +89,17 @@ app.use('/api/auth', authRoutes);
 app.use('/api/nodes', nodeRoutes);
 app.use('/api/relationships', relationshipRoutes);
 app.use('/api/graph', graphRoutes);
+app.use('/api/phase2', phase2Routes);
 
 // Root route
 app.get('/', (req, res) => {
   res.json({
     message: 'Ryuk API - AI-Powered Manga Generation System',
-    version: '1.0.0',
-    phase: 'Phase 1 - Foundation',
+    version: '2.0.0',
+    phase: 'Phase 2 - Story Graph Architecture (100% Complete)',
     docs: '/api/docs',
     health: '/api/health',
+    phase2: '/api/phase2/capabilities',
   });
 });
 
