@@ -285,10 +285,12 @@ export type ContentType = z.infer<typeof ContentTypeSchema>;
 // =============================================================================
 
 export type AnyNode = SceneNode | CharacterNode | ChoiceNode | EventNode | LocationNode | ItemNode |
-                    StoryNode | KnotNode | StitchNode | ContentElementNode;
+                    StoryNode | KnotNode | StitchNode | ContentElementNode |
+                    KiNode | ShoNode | TenNode | KetsuNode | JoHaKyuNode | PanelTransitionNode | CharacterNetworkNode;
 
 export const NodeTypeSchema = z.enum(['Scene', 'Character', 'Choice', 'Event', 'Location', 'Item',
-                                     'Story', 'Knot', 'Stitch', 'ContentElement']);
+                                     'Story', 'Knot', 'Stitch', 'ContentElement',
+                                     'Ki', 'Sho', 'Ten', 'Ketsu', 'JoHaKyu', 'PanelTransition', 'CharacterNetwork']);
 export type NodeType = z.infer<typeof NodeTypeSchema>;
 
 // =============================================================================
@@ -305,10 +307,19 @@ export type CreateStoryNode = Omit<StoryNode, 'id' | 'created_at' | 'updated_at'
 export type CreateKnotNode = Omit<KnotNode, 'id' | 'created_at' | 'updated_at'>;
 export type CreateStitchNode = Omit<StitchNode, 'id' | 'created_at' | 'updated_at'>;
 export type CreateContentElementNode = Omit<ContentElementNode, 'id' | 'created_at' | 'updated_at'>;
+export type CreateKiNode = Omit<KiNode, 'id' | 'created_at' | 'updated_at'>;
+export type CreateShoNode = Omit<ShoNode, 'id' | 'created_at' | 'updated_at'>;
+export type CreateTenNode = Omit<TenNode, 'id' | 'created_at' | 'updated_at'>;
+export type CreateKetsuNode = Omit<KetsuNode, 'id' | 'created_at' | 'updated_at'>;
+export type CreateJoHaKyuNode = Omit<JoHaKyuNode, 'id' | 'created_at' | 'updated_at'>;
+export type CreatePanelTransitionNode = Omit<PanelTransitionNode, 'id' | 'created_at' | 'updated_at'>;
+export type CreateCharacterNetworkNode = Omit<CharacterNetworkNode, 'id' | 'created_at' | 'updated_at'>;
 
 export type CreateAnyNode = CreateSceneNode | CreateCharacterNode | CreateChoiceNode |
                           CreateEventNode | CreateLocationNode | CreateItemNode |
-                          CreateStoryNode | CreateKnotNode | CreateStitchNode | CreateContentElementNode;
+                          CreateStoryNode | CreateKnotNode | CreateStitchNode | CreateContentElementNode |
+                          CreateKiNode | CreateShoNode | CreateTenNode | CreateKetsuNode |
+                          CreateJoHaKyuNode | CreatePanelTransitionNode | CreateCharacterNetworkNode;
 
 // =============================================================================
 // UPDATE TYPES (all fields optional except id)
@@ -324,8 +335,352 @@ export type UpdateStoryNode = Partial<Omit<StoryNode, 'id' | 'created_at'>> & { 
 export type UpdateKnotNode = Partial<Omit<KnotNode, 'id' | 'created_at'>> & { id: string };
 export type UpdateStitchNode = Partial<Omit<StitchNode, 'id' | 'created_at'>> & { id: string };
 export type UpdateContentElementNode = Partial<Omit<ContentElementNode, 'id' | 'created_at'>> & { id: string };
+export type UpdateKiNode = Partial<Omit<KiNode, 'id' | 'created_at'>> & { id: string };
+export type UpdateShoNode = Partial<Omit<ShoNode, 'id' | 'created_at'>> & { id: string };
+export type UpdateTenNode = Partial<Omit<TenNode, 'id' | 'created_at'>> & { id: string };
+export type UpdateKetsuNode = Partial<Omit<KetsuNode, 'id' | 'created_at'>> & { id: string };
+export type UpdateJoHaKyuNode = Partial<Omit<JoHaKyuNode, 'id' | 'created_at'>> & { id: string };
+export type UpdatePanelTransitionNode = Partial<Omit<PanelTransitionNode, 'id' | 'created_at'>> & { id: string };
+export type UpdateCharacterNetworkNode = Partial<Omit<CharacterNetworkNode, 'id' | 'created_at'>> & { id: string };
 
 export type UpdateAnyNode = UpdateSceneNode | UpdateCharacterNode | UpdateChoiceNode |
                           UpdateEventNode | UpdateLocationNode | UpdateItemNode |
-                          UpdateStoryNode | UpdateKnotNode | UpdateStitchNode | UpdateContentElementNode;
+                          UpdateStoryNode | UpdateKnotNode | UpdateStitchNode | UpdateContentElementNode |
+                          UpdateKiNode | UpdateShoNode | UpdateTenNode | UpdateKetsuNode |
+                          UpdateJoHaKyuNode | UpdatePanelTransitionNode | UpdateCharacterNetworkNode;
+
+// =============================================================================
+// PHASE 3: MANGA NARRATIVE STRUCTURES
+// =============================================================================
+
+// -----------------------------------------------------------------------------
+// KISHŌTENKETSU STRUCTURE NODES
+// -----------------------------------------------------------------------------
+
+// KI NODE - Introduction phase
+export const KiTypeSchema = z.enum(['character', 'setting', 'mood', 'concept', 'relationship']);
+
+export const KiNodeSchema = BaseNodeSchema.extend({
+  story_id: z.string().uuid(),
+  knot_id: z.string().uuid().optional(),
+  ki_type: KiTypeSchema,
+  title: z.string().min(1).max(200),
+  description: z.string().max(5000),
+  establishment_elements: z.array(z.object({
+    element_name: z.string(),
+    element_type: z.string(),
+    importance_level: z.number().min(0).max(1),
+    reference_id: z.string().uuid().optional(),
+  })).default([]),
+  pacing_weight: z.number().min(0).max(1).default(0.5),
+  setup_completeness: z.number().min(0).max(1).default(0),
+  transition_indicators: z.array(z.object({
+    indicator_type: z.string(),
+    indicator_strength: z.number().min(0).max(1),
+    target_phase: z.string(),
+  })).default([]),
+  narrative_foundation: z.object({
+    core_elements: z.array(z.string()).default([]),
+    atmosphere_established: z.boolean().default(false),
+    character_presence: z.array(z.string().uuid()).default([]),
+    location_context: z.string().uuid().optional(),
+  }).default({}),
+});
+
+export type KiNode = z.infer<typeof KiNodeSchema>;
+export type KiType = z.infer<typeof KiTypeSchema>;
+
+// SHŌ NODE - Development phase
+export const ShoDevelopmentTypeSchema = z.enum(['character', 'situation', 'relationship', 'conflict', 'exploration']);
+
+export const ShoNodeSchema = BaseNodeSchema.extend({
+  story_id: z.string().uuid(),
+  knot_id: z.string().uuid().optional(),
+  ki_reference: z.string().uuid(),
+  development_type: ShoDevelopmentTypeSchema,
+  title: z.string().min(1).max(200),
+  description: z.string().max(5000),
+  complexity_level: z.number().int().min(1).max(10).default(5),
+  interaction_patterns: z.array(z.object({
+    pattern_type: z.string(),
+    characters_involved: z.array(z.string().uuid()),
+    intensity: z.number().min(0).max(1),
+  })).default([]),
+  tension_buildup: z.number().min(0).max(1).default(0),
+  revelation_seeds: z.array(z.object({
+    seed_id: z.string().uuid(),
+    seed_type: z.string(),
+    planted_element: z.string(),
+    foreshadowing_strength: z.number().min(0).max(1),
+    ten_reference: z.string().uuid().optional(),
+  })).default([]),
+  situation_development: z.object({
+    development_trajectory: z.enum(['rising', 'stable', 'fluctuating']).default('rising'),
+    complications_introduced: z.array(z.string()).default([]),
+    narrative_threads: z.array(z.string().uuid()).default([]),
+  }).default({}),
+});
+
+export type ShoNode = z.infer<typeof ShoNodeSchema>;
+export type ShoDevelopmentType = z.infer<typeof ShoDevelopmentTypeSchema>;
+
+// TEN NODE - Twist/Turn phase
+export const TenTwistTypeSchema = z.enum(['character_revelation', 'plot_twist', 'setting_shift',
+                                          'perception_change', 'timeline_reveal', 'identity_reveal']);
+
+export const TenRelevationScopeSchema = z.enum(['local', 'chapter', 'arc', 'global']);
+
+export const TenNodeSchema = BaseNodeSchema.extend({
+  story_id: z.string().uuid(),
+  knot_id: z.string().uuid().optional(),
+  sho_reference: z.string().uuid(),
+  twist_type: TenTwistTypeSchema,
+  revelation_scope: TenRelevationScopeSchema,
+  title: z.string().min(1).max(200),
+  description: z.string().max(5000),
+  recontextualization_targets: z.array(z.object({
+    target_id: z.string().uuid(),
+    target_type: z.string(),
+    meaning_before: z.string(),
+    meaning_after: z.string(),
+    impact_strength: z.number().min(0).max(1),
+  })).default([]),
+  surprise_factor: z.number().min(0).max(1).default(0.5),
+  setup_validation: z.array(z.object({
+    required_element: z.string(),
+    element_id: z.string().uuid().optional(),
+    setup_adequacy: z.number().min(0).max(1),
+  })).default([]),
+  twist_mechanics: z.object({
+    revelation_method: z.string(),
+    timing_optimization: z.number().min(0).max(1),
+    reader_impact_prediction: z.number().min(0).max(1),
+    narrative_coherence: z.number().min(0).max(1),
+  }).optional(),
+  propagation_data: z.object({
+    affected_nodes: z.array(z.string().uuid()).default([]),
+    semantic_changes: z.array(z.record(z.string(), z.any())).default([]),
+    cascade_depth: z.number().int().min(0).default(0),
+  }).default({}),
+});
+
+export type TenNode = z.infer<typeof TenNodeSchema>;
+export type TenTwistType = z.infer<typeof TenTwistTypeSchema>;
+export type TenRelevationScope = z.infer<typeof TenRelevationScopeSchema>;
+
+// KETSU NODE - Conclusion phase
+export const KetsuResolutionTypeSchema = z.enum(['complete', 'partial', 'open', 'cyclical']);
+
+export const KetsuNodeSchema = BaseNodeSchema.extend({
+  story_id: z.string().uuid(),
+  knot_id: z.string().uuid().optional(),
+  ten_reference: z.string().uuid(),
+  resolution_type: KetsuResolutionTypeSchema,
+  title: z.string().min(1).max(200),
+  description: z.string().max(5000),
+  incorporation_elements: z.array(z.object({
+    element_name: z.string(),
+    twist_element_id: z.string().uuid(),
+    incorporation_method: z.string(),
+    resolution_quality: z.number().min(0).max(1),
+  })).default([]),
+  closure_level: z.number().min(0).max(1).default(0.5),
+  new_understanding: z.string().max(2000),
+  thematic_completion: z.array(z.object({
+    theme_name: z.string(),
+    theme_id: z.string().uuid().optional(),
+    completion_status: z.enum(['resolved', 'evolved', 'ongoing']),
+    thematic_resonance: z.number().min(0).max(1),
+  })).default([]),
+  kishōtenketsu_validation: z.object({
+    cycle_completeness: z.number().min(0).max(1),
+    ki_integration: z.boolean().default(false),
+    sho_integration: z.boolean().default(false),
+    ten_integration: z.boolean().default(false),
+    structural_integrity: z.number().min(0).max(1),
+  }).optional(),
+});
+
+export type KetsuNode = z.infer<typeof KetsuNodeSchema>;
+export type KetsuResolutionType = z.infer<typeof KetsuResolutionTypeSchema>;
+
+// -----------------------------------------------------------------------------
+// JO-HA-KYŪ PACING SYSTEM
+// -----------------------------------------------------------------------------
+
+export const JoHaKyuPhaseSchema = z.enum(['jo', 'ha', 'kyu']);
+export const TemporalScaleSchema = z.enum(['panel', 'scene', 'stitch', 'chapter', 'arc', 'story']);
+
+export const JoHaKyuNodeSchema = BaseNodeSchema.extend({
+  story_id: z.string().uuid(),
+  parent_node_id: z.string().uuid().optional(),
+  temporal_scale: TemporalScaleSchema,
+  phase: JoHaKyuPhaseSchema,
+  title: z.string().min(1).max(200),
+  description: z.string().max(2000),
+  pacing_intensity: z.number().min(0).max(1).default(0.5),
+  rhythm_pattern: z.array(z.object({
+    beat_number: z.number().int().min(1),
+    intensity: z.number().min(0).max(1),
+    duration: z.number().min(0),
+    emotional_tone: z.string().optional(),
+  })).default([]),
+  parent_scale_reference: z.string().uuid().optional(),
+  child_scales: z.array(z.string().uuid()).default([]),
+  fractal_coordination: z.object({
+    parent_phase_alignment: z.number().min(0).max(1),
+    child_phases_coherence: z.number().min(0).max(1),
+    cross_scale_harmony: z.number().min(0).max(1),
+  }).optional(),
+  phase_characteristics: z.object({
+    jo_properties: z.object({
+      buildup_rate: z.number().min(0).max(1),
+      establishment_depth: z.number().min(0).max(1),
+      preparation_quality: z.number().min(0).max(1),
+    }).optional(),
+    ha_properties: z.object({
+      acceleration_rate: z.number().min(0).max(1),
+      complication_density: z.number().min(0).max(1),
+      momentum_score: z.number().min(0).max(1),
+    }).optional(),
+    kyu_properties: z.object({
+      resolution_speed: z.number().min(0).max(1),
+      climax_impact: z.number().min(0).max(1),
+      conclusion_satisfaction: z.number().min(0).max(1),
+    }).optional(),
+  }).default({}),
+  transition_markers: z.array(z.object({
+    from_phase: JoHaKyuPhaseSchema,
+    to_phase: JoHaKyuPhaseSchema,
+    transition_quality: z.number().min(0).max(1),
+    marker_node_id: z.string().uuid().optional(),
+  })).default([]),
+});
+
+export type JoHaKyuNode = z.infer<typeof JoHaKyuNodeSchema>;
+export type JoHaKyuPhase = z.infer<typeof JoHaKyuPhaseSchema>;
+export type TemporalScale = z.infer<typeof TemporalScaleSchema>;
+
+// -----------------------------------------------------------------------------
+// PANEL TRANSITION SYSTEM
+// -----------------------------------------------------------------------------
+
+export const PanelTransitionTypeSchema = z.enum([
+  'moment_to_moment',
+  'action_to_action',
+  'subject_to_subject',
+  'scene_to_scene',
+  'aspect_to_aspect',
+  'non_sequitur'
+]);
+
+export const TransitionTemporalRelationshipSchema = z.enum([
+  'simultaneous',
+  'sequential',
+  'flashback',
+  'flash_forward',
+  'parallel',
+  'cyclical'
+]);
+
+export const PanelTransitionNodeSchema = BaseNodeSchema.extend({
+  from_content_id: z.string().uuid(),
+  to_content_id: z.string().uuid(),
+  transition_type: PanelTransitionTypeSchema,
+  transition_strength: z.number().min(0).max(1).default(0.5),
+  visual_continuity: z.number().min(0).max(1).default(0.5),
+  temporal_relationship: TransitionTemporalRelationshipSchema,
+  narrative_purpose: z.enum(['pacing', 'atmosphere', 'revelation', 'action', 'emotion', 'time_passage']),
+
+  // Aspect-to-aspect specific properties
+  aspect_exploration: z.object({
+    aspect_type: z.enum(['mood', 'atmosphere', 'sensory', 'emotional', 'thematic']).optional(),
+    exploration_depth: z.number().min(0).max(1).optional(),
+    mood_coherence: z.number().min(0).max(1).optional(),
+    atmospheric_elements: z.array(z.string()).default([]),
+    sensory_focus: z.array(z.object({
+      sense: z.enum(['visual', 'auditory', 'tactile', 'olfactory', 'gustatory']),
+      intensity: z.number().min(0).max(1),
+      descriptive_element: z.string(),
+    })).default([]),
+  }).optional(),
+
+  transition_metadata: z.object({
+    gutter_size: z.enum(['small', 'medium', 'large', 'variable']).default('medium'),
+    reader_inference_required: z.number().min(0).max(1).default(0.5),
+    cognitive_load: z.number().min(0).max(1).default(0.5),
+    emotional_impact: z.number().min(0).max(1).default(0.5),
+  }).default({}),
+
+  validation_data: z.object({
+    transition_appropriateness: z.number().min(0).max(1),
+    narrative_flow_quality: z.number().min(0).max(1),
+    reader_comprehension_prediction: z.number().min(0).max(1),
+  }).optional(),
+});
+
+export type PanelTransitionNode = z.infer<typeof PanelTransitionNodeSchema>;
+export type PanelTransitionType = z.infer<typeof PanelTransitionTypeSchema>;
+export type TransitionTemporalRelationship = z.infer<typeof TransitionTemporalRelationshipSchema>;
+
+// -----------------------------------------------------------------------------
+// CHARACTER NETWORK TOPOLOGY (MANGA GENRE PATTERNS)
+// -----------------------------------------------------------------------------
+
+export const MangaGenreSchema = z.enum(['shonen', 'shojo', 'seinen', 'josei', 'kodomo']);
+
+export const CharacterNetworkNodeSchema = BaseNodeSchema.extend({
+  story_id: z.string().uuid(),
+  genre: MangaGenreSchema,
+  character_id: z.string().uuid(),
+
+  // Shōnen network properties
+  shonen_properties: z.object({
+    protagonist_centrality: z.number().min(0).max(1).optional(),
+    network_density: z.number().min(0).max(1).optional(),
+    growth_pattern: z.enum(['linear', 'exponential', 'plateau', 'spiral']).optional(),
+    ally_cluster_size: z.number().int().min(0).optional(),
+    rival_connection_strength: z.number().min(0).max(1).optional(),
+    team_formation_stage: z.enum(['solo', 'forming', 'storming', 'norming', 'performing']).optional(),
+  }).optional(),
+
+  // Shōjo network properties
+  shojo_properties: z.object({
+    intimacy_level: z.number().min(0).max(1).optional(),
+    network_sparsity: z.number().min(0).max(1).optional(),
+    emotional_depth: z.number().min(0).max(1).optional(),
+    confidant_centrality: z.number().min(0).max(1).optional(),
+    romantic_triangle_present: z.boolean().optional(),
+    relationship_complexity: z.number().min(0).max(1).optional(),
+  }).optional(),
+
+  // Small-world network properties
+  small_world_metrics: z.object({
+    clustering_coefficient: z.number().min(0).max(1),
+    average_path_length: z.number().min(0),
+    small_world_coefficient: z.number().min(0),
+    bridge_connections: z.array(z.string().uuid()).default([]),
+    local_clustering: z.number().min(0).max(1),
+  }).optional(),
+
+  // Network analysis data
+  topology_analysis: z.object({
+    degree_centrality: z.number().min(0).max(1),
+    betweenness_centrality: z.number().min(0).max(1),
+    closeness_centrality: z.number().min(0).max(1),
+    eigenvector_centrality: z.number().min(0).max(1),
+    pagerank_score: z.number().min(0).max(1),
+  }).optional(),
+
+  connection_patterns: z.array(z.object({
+    pattern_type: z.string(),
+    connected_character_id: z.string().uuid(),
+    connection_strength: z.number().min(0).max(1),
+    relationship_nature: z.string(),
+    narrative_significance: z.number().min(0).max(1),
+  })).default([]),
+});
+
+export type CharacterNetworkNode = z.infer<typeof CharacterNetworkNodeSchema>;
+export type MangaGenre = z.infer<typeof MangaGenreSchema>;
 

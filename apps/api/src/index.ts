@@ -19,6 +19,7 @@ import graphRoutes from './routes/graph';
 import healthRoutes from './routes/health';
 import authRoutes from './routes/auth';
 import phase2Routes from './routes/phase2';
+import { createPhase3Router } from './routes/phase3';
 
 // Load environment variables
 dotenv.config();
@@ -95,11 +96,12 @@ app.use('/api/phase2', phase2Routes);
 app.get('/', (req, res) => {
   res.json({
     message: 'Ryuk API - AI-Powered Manga Generation System',
-    version: '2.0.0',
-    phase: 'Phase 2 - Story Graph Architecture (100% Complete)',
+    version: '3.0.0',
+    phase: 'Phase 3 - Manga Narrative Structures',
     docs: '/api/docs',
     health: '/api/health',
     phase2: '/api/phase2/capabilities',
+    phase3: '/api/phase3/status',
   });
 });
 
@@ -168,6 +170,11 @@ async function startServer() {
   try {
     // Connect to databases
     await connectDatabases();
+
+    // Get Neo4j driver for Phase 3 routes
+    const { neo4jDriver } = await import('./database/connections');
+    const phase3Router = createPhase3Router(neo4jDriver);
+    app.use('/api/phase3', phase3Router);
 
     // Initialize Redis cache service if enabled
     if (process.env.REDIS_ENABLED === 'true') {

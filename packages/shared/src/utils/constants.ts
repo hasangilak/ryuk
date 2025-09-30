@@ -14,6 +14,14 @@ export const NODE_TYPES = {
   KNOT: 'Knot',
   STITCH: 'Stitch',
   CONTENT_ELEMENT: 'ContentElement',
+  // Phase 3: Manga Narrative Structures
+  KI: 'Ki',
+  SHO: 'Sho',
+  TEN: 'Ten',
+  KETSU: 'Ketsu',
+  JO_HA_KYU: 'JoHaKyu',
+  PANEL_TRANSITION: 'PanelTransition',
+  CHARACTER_NETWORK: 'CharacterNetwork',
 } as const;
 
 export const ALL_NODE_TYPES = Object.values(NODE_TYPES);
@@ -216,10 +224,103 @@ export const ALL_EMOTIONAL_TONES = Object.values(EMOTIONAL_TONES);
 // =============================================================================
 
 export const SYSTEM_CONFIG = {
-  VERSION: '1.0.0',
-  PHASE: 'Phase 1 - Foundation',
-  SCHEMA_VERSION: '1.0',
+  VERSION: '3.0.0',
+  PHASE: 'Phase 3 - Manga Narrative Structures',
+  SCHEMA_VERSION: '3.0',
   API_VERSION: 'v1',
+} as const;
+
+// =============================================================================
+// PHASE 3: KISHŌTENKETSU CONSTANTS
+// =============================================================================
+
+export const KISHOTENKETSU_PHASES = {
+  KI: 'ki',
+  SHO: 'sho',
+  TEN: 'ten',
+  KETSU: 'ketsu',
+} as const;
+
+export const KI_TYPES = {
+  CHARACTER: 'character',
+  SETTING: 'setting',
+  MOOD: 'mood',
+  CONCEPT: 'concept',
+  RELATIONSHIP: 'relationship',
+} as const;
+
+export const SHO_DEVELOPMENT_TYPES = {
+  CHARACTER: 'character',
+  SITUATION: 'situation',
+  RELATIONSHIP: 'relationship',
+  CONFLICT: 'conflict',
+  EXPLORATION: 'exploration',
+} as const;
+
+export const TEN_TWIST_TYPES = {
+  CHARACTER_REVELATION: 'character_revelation',
+  PLOT_TWIST: 'plot_twist',
+  SETTING_SHIFT: 'setting_shift',
+  PERCEPTION_CHANGE: 'perception_change',
+  TIMELINE_REVEAL: 'timeline_reveal',
+  IDENTITY_REVEAL: 'identity_reveal',
+} as const;
+
+export const KETSU_RESOLUTION_TYPES = {
+  COMPLETE: 'complete',
+  PARTIAL: 'partial',
+  OPEN: 'open',
+  CYCLICAL: 'cyclical',
+} as const;
+
+// =============================================================================
+// PHASE 3: JO-HA-KYŪ CONSTANTS
+// =============================================================================
+
+export const JO_HA_KYU_PHASES = {
+  JO: 'jo',
+  HA: 'ha',
+  KYU: 'kyu',
+} as const;
+
+export const TEMPORAL_SCALES = {
+  PANEL: 'panel',
+  SCENE: 'scene',
+  STITCH: 'stitch',
+  CHAPTER: 'chapter',
+  ARC: 'arc',
+  STORY: 'story',
+} as const;
+
+// =============================================================================
+// PHASE 3: PANEL TRANSITION CONSTANTS
+// =============================================================================
+
+export const PANEL_TRANSITION_TYPES = {
+  MOMENT_TO_MOMENT: 'moment_to_moment',
+  ACTION_TO_ACTION: 'action_to_action',
+  SUBJECT_TO_SUBJECT: 'subject_to_subject',
+  SCENE_TO_SCENE: 'scene_to_scene',
+  ASPECT_TO_ASPECT: 'aspect_to_aspect',
+  NON_SEQUITUR: 'non_sequitur',
+} as const;
+
+export const TRANSITION_TEMPORAL_RELATIONSHIPS = {
+  SIMULTANEOUS: 'simultaneous',
+  SEQUENTIAL: 'sequential',
+  FLASHBACK: 'flashback',
+  FLASH_FORWARD: 'flash_forward',
+  PARALLEL: 'parallel',
+  CYCLICAL: 'cyclical',
+} as const;
+
+export const NARRATIVE_PURPOSES = {
+  PACING: 'pacing',
+  ATMOSPHERE: 'atmosphere',
+  REVELATION: 'revelation',
+  ACTION: 'action',
+  EMOTION: 'emotion',
+  TIME_PASSAGE: 'time_passage',
 } as const;
 
 export const HTTP_STATUS_CODES = {
