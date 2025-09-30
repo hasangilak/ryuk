@@ -5,6 +5,9 @@ import {
   JoHaKyuService,
   CharacterNetworkService,
   PanelTransitionService,
+  BidirectionalRelationshipService,
+  GenreClassificationService,
+  MangaValidationService,
 } from '../../services/phase3';
 
 export function createPhase3Router(driver: Driver): Router {
@@ -14,6 +17,9 @@ export function createPhase3Router(driver: Driver): Router {
   const johakyuService = new JoHaKyuService(driver);
   const characterNetworkService = new CharacterNetworkService(driver);
   const panelTransitionService = new PanelTransitionService(driver);
+  const bidirectionalService = new BidirectionalRelationshipService(driver);
+  const genreService = new GenreClassificationService(driver);
+  const validationService = new MangaValidationService(driver);
 
   // =============================================================================
   // KISHŌTENKETSU ROUTES
@@ -421,6 +427,167 @@ export function createPhase3Router(driver: Driver): Router {
   });
 
   // =============================================================================
+  // BIDIRECTIONAL RELATIONSHIP ROUTES
+  // =============================================================================
+
+  router.post('/bidirectional-relationship', async (req: Request, res: Response) => {
+    try {
+      const relationship = await bidirectionalService.createBidirectionalRelationship(req.body);
+      return res.status(201).json(relationship);
+    } catch (error: any) {
+      return res.status(500).json({ error: error.message });
+    }
+  });
+
+  router.post('/bidirectional-relationship/apply/:tenNodeId', async (req: Request, res: Response) => {
+    try {
+      const result = await bidirectionalService.applyRetroactiveModification(req.params.tenNodeId);
+      return res.json(result);
+    } catch (error: any) {
+      return res.status(500).json({ error: error.message });
+    }
+  });
+
+  router.post('/bidirectional-relationship/recontextualize/:tenNodeId/:storyId', async (req: Request, res: Response) => {
+    try {
+      const result = await bidirectionalService.recontextualizeTimeline(req.params.tenNodeId, req.params.storyId);
+      return res.json(result);
+    } catch (error: any) {
+      return res.status(500).json({ error: error.message });
+    }
+  });
+
+  router.post('/bidirectional-relationship/propagate/:tenNodeId', async (req: Request, res: Response) => {
+    try {
+      const { scope } = req.body;
+      const result = await bidirectionalService.propagateRevelation(req.params.tenNodeId, scope);
+      return res.json(result);
+    } catch (error: any) {
+      return res.status(500).json({ error: error.message });
+    }
+  });
+
+  router.get('/bidirectional-relationship/validate-setup/:tenNodeId', async (req: Request, res: Response) => {
+    try {
+      const result = await bidirectionalService.validateRevelationSetup(req.params.tenNodeId);
+      return res.json(result);
+    } catch (error: any) {
+      return res.status(500).json({ error: error.message });
+    }
+  });
+
+  router.get('/bidirectional-relationship/node/:nodeId', async (req: Request, res: Response) => {
+    try {
+      const relationships = await bidirectionalService.getBidirectionalRelationships(req.params.nodeId);
+      return res.json(relationships);
+    } catch (error: any) {
+      return res.status(500).json({ error: error.message });
+    }
+  });
+
+  // =============================================================================
+  // GENRE CLASSIFICATION ROUTES
+  // =============================================================================
+
+  router.get('/genre/classify/:storyId', async (req: Request, res: Response) => {
+    try {
+      const classification = await genreService.classifyStory(req.params.storyId);
+      return res.json(classification);
+    } catch (error: any) {
+      return res.status(500).json({ error: error.message });
+    }
+  });
+
+  router.post('/genre/validate/:storyId', async (req: Request, res: Response) => {
+    try {
+      const { targetGenre } = req.body;
+      if (!targetGenre) {
+        return res.status(400).json({ error: 'targetGenre is required' });
+      }
+      const validation = await genreService.validateGenreAuthenticity(req.params.storyId, targetGenre);
+      return res.json(validation);
+    } catch (error: any) {
+      return res.status(500).json({ error: error.message });
+    }
+  });
+
+  router.get('/genre/patterns/:storyId', async (req: Request, res: Response) => {
+    try {
+      const analysis = await genreService.analyzeNarrativePatterns(req.params.storyId);
+      return res.json(analysis);
+    } catch (error: any) {
+      return res.status(500).json({ error: error.message });
+    }
+  });
+
+  router.get('/genre/pattern-library', async (req: Request, res: Response) => {
+    try {
+      const { genre } = req.query;
+      const library = genreService.getPatternLibrary(genre as any);
+      return res.json(library);
+    } catch (error: any) {
+      return res.status(500).json({ error: error.message });
+    }
+  });
+
+  // =============================================================================
+  // MANGA VALIDATION ROUTES
+  // =============================================================================
+
+  router.get('/validate/kishotenketsu/:storyId', async (req: Request, res: Response) => {
+    try {
+      const validation = await validationService.validateKishotenketsuStructure(req.params.storyId);
+      return res.json(validation);
+    } catch (error: any) {
+      return res.status(500).json({ error: error.message });
+    }
+  });
+
+  router.get('/validate/johakyu/:storyId', async (req: Request, res: Response) => {
+    try {
+      const validation = await validationService.validateJoHaKyuPacing(req.params.storyId);
+      return res.json(validation);
+    } catch (error: any) {
+      return res.status(500).json({ error: error.message });
+    }
+  });
+
+  router.post('/validate/character-network/:storyId', async (req: Request, res: Response) => {
+    try {
+      const { expectedGenre } = req.body;
+      if (!expectedGenre) {
+        return res.status(400).json({ error: 'expectedGenre is required' });
+      }
+      const validation = await validationService.validateCharacterNetwork(req.params.storyId, expectedGenre);
+      return res.json(validation);
+    } catch (error: any) {
+      return res.status(500).json({ error: error.message });
+    }
+  });
+
+  router.get('/validate/panel-transitions/:storyId', async (req: Request, res: Response) => {
+    try {
+      const validation = await validationService.validatePanelTransitions(req.params.storyId);
+      return res.json(validation);
+    } catch (error: any) {
+      return res.status(500).json({ error: error.message });
+    }
+  });
+
+  router.post('/validate/comprehensive/:storyId', async (req: Request, res: Response) => {
+    try {
+      const { genre } = req.body;
+      if (!genre) {
+        return res.status(400).json({ error: 'genre is required' });
+      }
+      const validation = await validationService.validateMangaStructure(req.params.storyId, genre);
+      return res.json(validation);
+    } catch (error: any) {
+      return res.status(500).json({ error: error.message });
+    }
+  });
+
+  // =============================================================================
   // PHASE 3 STATUS & INFO
   // =============================================================================
 
@@ -433,6 +600,9 @@ export function createPhase3Router(driver: Driver): Router {
         johakyu: 'Multi-resolution fractal pacing system',
         character_network: 'Genre-specific topology analysis (Shōnen/Shōjo)',
         panel_transitions: 'Complete McCloud taxonomy with aspect-to-aspect support',
+        bidirectional_relationships: 'Retroactive semantic modification for twists',
+        genre_classification: 'Automatic manga genre detection and validation',
+        manga_validation: 'Comprehensive cultural authenticity validation',
       },
       status: 'operational',
     });
